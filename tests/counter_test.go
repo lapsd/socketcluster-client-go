@@ -2,8 +2,9 @@ package tests
 
 import (
 	"testing"
+
+	"github.com/lapsd/socketcluster-client-go/scclient/utils"
 	"github.com/stretchr/testify/assert"
-	"github.com/sacOO7/socketcluster-client-go/scclient/utils"
 )
 
 func TestShouldReturnIncrementedValue(t *testing.T) {

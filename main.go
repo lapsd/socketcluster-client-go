@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/sacOO7/socketcluster-client-go/scclient"
-	"text/scanner"
-	"os"
 	"fmt"
+	"os"
+
+	"github.com/lapsd/socketcluster-client-go/scclient"
 )
 
 func onConnect(client scclient.Client) {
@@ -12,38 +12,52 @@ func onConnect(client scclient.Client) {
 }
 
 func onDisconnect(client scclient.Client, err error) {
-	fmt.Printf("Error: %s\n", err.Error())
+	fmt.Printf("onDisconnect: %s\n", err.Error())
 	os.Exit(1)
 }
 
 func onConnectError(client scclient.Client, err error) {
-	fmt.Printf("Error: %s\n", err.Error())
+	fmt.Printf("onConnectError: %s\n", err.Error())
 	os.Exit(1)
 }
 
 func onSetAuthentication(client scclient.Client, token string) {
 	fmt.Println("Auth token received :", token)
-
 }
 
 func onAuthentication(client scclient.Client, isAuthenticated bool) {
 	fmt.Println("Client authenticated :", isAuthenticated)
+	go start(client)
 }
 
 func main() {
-	var reader scanner.Scanner
-	client := scclient.New("ws://localhost:8000/socketcluster/");
+	var workc = make(chan int)
+	client := scclient.New("ws://localhost:7000/socket.io/?EIO=3&transport=websocket&code=1234")
 	client.SetBasicListener(onConnect, onConnectError, onDisconnect)
 	client.SetAuthenticationListener(onSetAuthentication, onAuthentication)
+	client.On("connected", func(eventName string, data interface{}) {
+		onConnected(eventName, data, client)
+	})
+	client.On("test", onTest)
 	client.EnableLogging()
 	go client.Connect()
-
-	fmt.Println("Enter any key to terminate the program")
-	reader.Init(os.Stdin)
-	reader.Next()
-	// os.Exit(0)
+	<-workc
 }
 
 func start(client scclient.Client) {
-	// start writing your code from here
+
+}
+
+func onConnected(eventName string, data interface{}, client scclient.Client) {
+	fmt.Println("Got data ", data, " for event ", eventName)
+	// client.EmitAck("test", "This is a sample message", func(eventName string, err interface{}, data interface{}) {
+	// 	if err == nil {
+	// 		fmt.Println("Got ack for emit event with data ", data, " and error ", err)
+	// 	}
+	// 	fmt.Println("ERROR", err)
+	// })
+}
+
+func onTest(eventName string, data interface{}) {
+	fmt.Println("TESTING", eventName)
 }
